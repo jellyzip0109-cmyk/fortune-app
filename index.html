@@ -696,7 +696,8 @@ async function getFortune(){
   if(!birth){ alert('생년월일을 입력해주세요!'); return; }
 
   const char = CHARS[selectedChar];
-
+const age = new Date().getFullYear() - new Date(birth).getFullYear();
+const today = new Date().toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'});
   document.getElementById('loadingCard').style.display='block';
   document.getElementById('resultCard').style.display='none';
   document.getElementById('fortuneBtn').disabled=true;
