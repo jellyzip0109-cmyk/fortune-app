@@ -696,8 +696,6 @@ async function getFortune(){
   if(!birth){ alert('생년월일을 입력해주세요!'); return; }
 
   const char = CHARS[selectedChar];
-  const age = new Date().getFullYear() - new Date(birth).getFullYear();
-  const today = new Date().toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'});
 
   document.getElementById('loadingCard').style.display='block';
   document.getElementById('resultCard').style.display='none';
@@ -710,37 +708,14 @@ async function getFortune(){
     document.getElementById('loadingText').textContent=loadingMsgs[msgIdx];
   },1200);
 
-  const prompt = `당신은 ${char.style}입니다. ${today} 기준으로 ${age}세 ${gender}의 오늘 하루 운세를 봐주세요.
-
-반드시 다음 JSON 형식으로만 응답하세요 (다른 텍스트 없이):
-{
-  "total": "총운 (욕과 거친 말투로 3~4문장. 할매라면 경상도 사투리 + 욕 섞기)",
-  "love": {"stars": 3, "text": "애정운 한두 문장"},
-  "money": {"stars": 4, "text": "재물운 한두 문장"},
-  "work": {"stars": 2, "text": "직업운 한두 문장"},
-  "health": {"stars": 3, "text": "건강운 한두 문장"},
-  "luckyColor": "행운의 색",
-  "luckyNumber": 7,
-  "luckyFood": "행운의 음식",
-  "avoid": "오늘 피할 것"
-}
-
-모든 텍스트에 캐릭터 특유의 말투와 욕/직설적 표현을 반드시 포함하세요. 순화하지 마세요.`;
-
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('/api/fortune', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        messages:[{role:'user', content:prompt}]
-      })
+      body:JSON.stringify({ birth, gender, charIndex: selectedChar })
     });
-    const data = await res.json();
-    const raw = data.content.map(b=>b.text||'').join('');
-    const clean = raw.replace(/```json|```/g,'').trim();
-    const fortune = JSON.parse(clean);
+    const fortune = await res.json();
+    if(fortune.error) throw new Error(fortune.error);
     clearInterval(msgInterval);
     renderFortune(fortune, char, today);
     usedToday++;
